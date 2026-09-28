@@ -199,6 +199,21 @@ def load_txn(txn_id: str):
     return row, n
 
 
+
+def log_review_audit(txn_id: str, score: float, recommendation: str, hits: list[dict]) -> None:
+    """Persist each Streamlit/CoCo-style review for alerts + demo audit trail."""
+    tid = txn_id.replace("'", "''")
+    rules = json.dumps(hits).replace("'", "''")
+    try:
+        session.sql(f"""
+            INSERT INTO REVIEW_AUDIT (TXN_ID, RISK_SCORE, RECOMMENDATION, FIRED_RULES, SOURCE)
+            SELECT '{tid}', {score}, '{recommendation}', PARSE_JSON('{rules}'), 'STREAMLIT_SIS'
+        """).collect()
+    except Exception:
+        # Table may not exist yet — run sql/03_audit_and_alert.sql
+        pass
+
+
 def open_case(txn_id: str, score: float, recommendation: str, actions: list[str]) -> int:
     priority = "HIGH" if score >= 70 else "MEDIUM" if score >= 40 else "LOW"
     payload = json.dumps(actions).replace("'", "''")
