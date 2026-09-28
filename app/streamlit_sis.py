@@ -4,6 +4,7 @@ Hack2Skill · Snowflake CoCo CLI Hackathon 2026 – GCC Edition
 from __future__ import annotations
 
 import json
+import time
 from typing import Any
 
 import pandas as pd
@@ -21,8 +22,35 @@ st.markdown(
     f"""
     <style>
       .block-container {{ padding-top: 1.2rem; }}
+      @keyframes shimmer {{
+        0% {{ background-position: 0% 50%; }}
+        50% {{ background-position: 100% 50%; }}
+        100% {{ background-position: 0% 50%; }}
+      }}
+      @keyframes fadeUp {{
+        from {{ opacity: 0; transform: translateY(10px); }}
+        to {{ opacity: 1; transform: translateY(0); }}
+      }}
+      @keyframes pulseGlow {{
+        0%, 100% {{ box-shadow: 0 0 0 0 rgba(220,38,38,.35); }}
+        50% {{ box-shadow: 0 0 0 10px rgba(220,38,38,0); }}
+      }}
+      @keyframes pulseGlowAmber {{
+        0%, 100% {{ box-shadow: 0 0 0 0 rgba(245,158,11,.35); }}
+        50% {{ box-shadow: 0 0 0 10px rgba(245,158,11,0); }}
+      }}
+      @keyframes pulseGlowGreen {{
+        0%, 100% {{ box-shadow: 0 0 0 0 rgba(22,163,74,.35); }}
+        50% {{ box-shadow: 0 0 0 10px rgba(22,163,74,0); }}
+      }}
+      @keyframes flow {{
+        0% {{ left: -30%; }}
+        100% {{ left: 100%; }}
+      }}
       .hero {{
-        background: linear-gradient(120deg, {DARK} 0%, #1e293b 55%, {ACCENT} 160%);
+        background: linear-gradient(120deg, {DARK}, #1e293b, {ACCENT}, {PRIMARY}, {DARK});
+        background-size: 300% 300%;
+        animation: shimmer 10s ease infinite, fadeUp .6s ease-out;
         border-radius: 16px; padding: 1.4rem 1.6rem; color: white;
         margin-bottom: 1rem; border: 1px solid rgba(255,255,255,.08);
       }}
@@ -32,10 +60,47 @@ st.markdown(
         display: inline-block; background: {PRIMARY}; color: #06202a;
         font-weight: 700; font-size: .75rem; padding: .2rem .55rem;
         border-radius: 999px; margin-right: .4rem;
+        animation: fadeUp .7s ease-out;
       }}
       .card {{
         background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
         padding: 1rem 1.1rem; margin-bottom: .75rem;
+        animation: fadeUp .45s ease-out;
+      }}
+      .pipeline {{
+        display: flex; gap: .5rem; margin: .75rem 0 1rem 0; flex-wrap: wrap;
+      }}
+      .pipestep {{
+        flex: 1; min-width: 140px; text-align: center; padding: .65rem .5rem;
+        border-radius: 10px; background: #f1f5f9; font-weight: 600; font-size: .85rem;
+        border: 1px solid #e2e8f0; animation: fadeUp .5s ease-out;
+      }}
+      .pipestep.active {{
+        background: linear-gradient(90deg, {PRIMARY}, {ACCENT}); color: white; border: none;
+      }}
+      .flowbar {{
+        position: relative; height: 6px; border-radius: 999px; background: #e2e8f0;
+        overflow: hidden; margin: .25rem 0 1rem 0;
+      }}
+      .flowbar > span {{
+        position: absolute; top: 0; height: 100%; width: 30%;
+        background: linear-gradient(90deg, transparent, {PRIMARY}, {ACCENT}, transparent);
+        animation: flow 1.4s linear infinite;
+      }}
+      .risk-hi {{ animation: pulseGlow 1.6s infinite; border-left: 6px solid #dc2626 !important; }}
+      .risk-mid {{ animation: pulseGlowAmber 1.8s infinite; border-left: 6px solid #f59e0b !important; }}
+      .risk-lo {{ animation: pulseGlowGreen 2s infinite; border-left: 6px solid #16a34a !important; }}
+      .gauge-wrap {{
+        background: #0f172a; border-radius: 12px; padding: .9rem 1rem; color: #e2e8f0;
+        animation: fadeUp .5s ease-out;
+      }}
+      .gauge-track {{
+        height: 14px; border-radius: 999px; background: #1e293b; overflow: hidden;
+      }}
+      .gauge-fill {{
+        height: 100%; border-radius: 999px;
+        transition: width 1s ease-out;
+        background: linear-gradient(90deg, #16a34a, #f59e0b, #dc2626);
       }}
     </style>
     <div class="hero">
@@ -165,6 +230,17 @@ def open_case(txn_id: str, score: float, recommendation: str, actions: list[str]
     return case_id
 
 
+st.markdown(
+    """
+    <div class="pipeline">
+      <div class="pipestep">① Input</div>
+      <div class="pipestep">② Processing</div>
+      <div class="pipestep">③ Output</div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
 with st.sidebar:
     st.markdown("### Demo controls")
     st.caption("Hack2Skill · CoCo CLI · GCC")
@@ -182,7 +258,30 @@ with st.sidebar:
     run = st.button("▶ Run policy review", type="primary", use_container_width=True)
 
 if run:
+    pipe = st.empty()
+    bar = st.empty()
+    status = st.empty()
+    stages = [
+        ("① Input", "Loading case context…"),
+        ("② Processing", "Matching AML policies…"),
+        ("③ Output", "Building recommendation…"),
+    ]
+    for i, (label, msg) in enumerate(stages):
+        steps_html = []
+        names = ["① Input", "② Processing", "③ Output"]
+        for j, name in enumerate(names):
+            cls = "pipestep active" if j <= i else "pipestep"
+            steps_html.append(f'<div class="{cls}">{name}</div>')
+        pipe.markdown(
+            f'<div class="pipeline">{"".join(steps_html)}</div><div class="flowbar"><span></span></div>',
+            unsafe_allow_html=True,
+        )
+        status.info(msg)
+        time.sleep(0.35)
+
     txn, under_n = load_txn(txn_id)
+    status.empty()
+    bar.empty()
     if not txn:
         st.error(f"No transaction found for `{txn_id}`.")
     else:
@@ -192,24 +291,36 @@ if run:
             "txn_id": txn_id, "txn": txn, "score": score, "hits": hits,
             "recommendation": rec, "actions": next_actions(rec, score),
         }
+        pipe.empty()
 
 rev = st.session_state.get("review")
 if not rev:
-    st.info("Pick **T2001**, **T2005**, or **T1001**, then Run.")
+    st.info("Pick **T2001**, **T2005**, or **T1001**, then Run — watch the pipeline animate.")
 else:
-    color = "#dc2626" if rev["score"] >= 70 else "#f59e0b" if rev["score"] >= 40 else "#16a34a"
+    score = rev["score"]
+    risk_cls = "risk-hi" if score >= 70 else "risk-mid" if score >= 40 else "risk-lo"
+    band = "High — escalate" if score >= 70 else "Medium — enhanced review" if score >= 40 else "Low — clear"
     m1, m2, m3, m4 = st.columns(4)
-    m1.metric("Risk score", f"{rev['score']:.0f}")
+    m1.metric("Risk score", f"{score:.0f}")
     m2.metric("Recommendation", rev["recommendation"])
     m3.metric("Fired rules", len(rev["hits"]))
     m4.metric("Txn", rev["txn_id"])
+
     st.markdown(
-        f"<div class='card' style='border-left:6px solid {color}'>"
-        f"<b>Decision band:</b> "
-        f"{'High — escalate' if rev['score'] >= 70 else 'Medium — enhanced review' if rev['score'] >= 40 else 'Low — clear'}"
-        f"</div>",
+        f"""
+        <div class="gauge-wrap">
+          <div style="display:flex;justify-content:space-between;margin-bottom:.4rem">
+            <span>Risk gauge</span><span><b>{score:.0f}</b> / 100 · {band}</span>
+          </div>
+          <div class="gauge-track"><div class="gauge-fill" style="width:{score}%"></div></div>
+        </div>
+        <div class="card {risk_cls}" style="margin-top:.75rem">
+          <b>Decision band:</b> {band}
+        </div>
+        """,
         unsafe_allow_html=True,
     )
+
     t1, t2, t3 = st.tabs(["① Input — Context", "② Processing — Rules", "③ Output — Actions"])
     with t1:
         st.dataframe(pd.DataFrame([rev["txn"]]), use_container_width=True, hide_index=True)
@@ -225,9 +336,11 @@ else:
             try:
                 cid = open_case(rev["txn_id"], rev["score"], rev["recommendation"], rev["actions"])
                 st.success(f"Case ready · CASE_ID = **{cid}**")
+                st.balloons()
             except Exception as e:
                 st.error(f"Open Case failed (run sql/02_cases_and_audit.sql first): {e}")
-    with st.expander("Judge notes / Key observations"):
+
+    with st.expander("Key considerations"):
         st.markdown(
             """
             - **T2005** can outrank **T2001** because structuring (CRITICAL) beats raw amount.
