@@ -28,3 +28,8 @@ Fraud analysts spend too long hunting policy clauses for each alert. This copilo
 - Sample demo data in `FRAUD_COPILOT.DEMO`
 
 ## Repo layout
+
+## Phase 1 polish
+- 4th skill: `suggest_next_actions`
+- Streamlit UI: `streamlit run app/streamlit_app.py`
+- Case tables: `CASES`, `CASE_EVENTS` (`sql/02_cases_and_audit.sql`)
