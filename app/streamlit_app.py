@@ -1,8 +1,7 @@
-"""Fraud Policy Copilot – Phase 2 Streamlit in Snowflake (SiS).
+"""Fraud Policy Copilot – Streamlit in Snowflake (SiS).
 Hack2Skill · Snowflake CoCo CLI Hackathon 2026 – GCC Edition
 
 Tabs: Review | Fraud ring | Cases
-Sanctions: demo inline HIGH_RISK_COUNTRIES only (NOT a live API).
 """
 from __future__ import annotations
 
@@ -41,22 +40,6 @@ st.markdown(
         50% {{ background-position: 100% 50%; }}
         100% {{ background-position: 0% 50%; }}
       }}
-      @keyframes fadeUp {{
-        from {{ opacity: 0; transform: translateY(10px); }}
-        to {{ opacity: 1; transform: translateY(0); }}
-      }}
-      @keyframes pulseGlow {{
-        0%, 100% {{ box-shadow: 0 0 0 0 rgba(220,38,38,.35); }}
-        50% {{ box-shadow: 0 0 0 10px rgba(220,38,38,0); }}
-      }}
-      @keyframes pulseGlowAmber {{
-        0%, 100% {{ box-shadow: 0 0 0 0 rgba(245,158,11,.35); }}
-        50% {{ box-shadow: 0 0 0 10px rgba(245,158,11,0); }}
-      }}
-      @keyframes pulseGlowGreen {{
-        0%, 100% {{ box-shadow: 0 0 0 0 rgba(22,163,74,.35); }}
-        50% {{ box-shadow: 0 0 0 10px rgba(22,163,74,0); }}
-      }}
       @keyframes flow {{
         0% {{ left: -30%; }}
         100% {{ left: 100%; }}
@@ -64,7 +47,7 @@ st.markdown(
       .hero {{
         background: linear-gradient(120deg, {DARK}, #1e293b, {ACCENT}, {PRIMARY}, {DARK});
         background-size: 300% 300%;
-        animation: shimmer 10s ease infinite, fadeUp .6s ease-out;
+        animation: shimmer 10s ease infinite;
         border-radius: 16px; padding: 1.4rem 1.6rem; color: white;
         margin-bottom: 1rem; border: 1px solid rgba(255,255,255,.08);
       }}
@@ -74,12 +57,10 @@ st.markdown(
         display: inline-block; background: {PRIMARY}; color: #06202a;
         font-weight: 700; font-size: .75rem; padding: .2rem .55rem;
         border-radius: 999px; margin-right: .4rem;
-        animation: fadeUp .7s ease-out;
       }}
       .card {{
         background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
         padding: 1rem 1.1rem; margin-bottom: .75rem;
-        animation: fadeUp .45s ease-out;
       }}
       .pipeline {{
         display: flex; gap: .5rem; margin: .75rem 0 1rem 0; flex-wrap: wrap;
@@ -87,7 +68,7 @@ st.markdown(
       .pipestep {{
         flex: 1; min-width: 140px; text-align: center; padding: .65rem .5rem;
         border-radius: 10px; background: #f1f5f9; font-weight: 600; font-size: .85rem;
-        border: 1px solid #e2e8f0; animation: fadeUp .5s ease-out;
+        border: 1px solid #e2e8f0;
       }}
       .pipestep.active {{
         background: linear-gradient(90deg, {PRIMARY}, {ACCENT}); color: white; border: none;
@@ -101,12 +82,11 @@ st.markdown(
         background: linear-gradient(90deg, transparent, {PRIMARY}, {ACCENT}, transparent);
         animation: flow 1.4s linear infinite;
       }}
-      .risk-hi {{ animation: pulseGlow 1.6s infinite; border-left: 6px solid #dc2626 !important; }}
-      .risk-mid {{ animation: pulseGlowAmber 1.8s infinite; border-left: 6px solid #f59e0b !important; }}
-      .risk-lo {{ animation: pulseGlowGreen 2s infinite; border-left: 6px solid #16a34a !important; }}
+      .risk-hi {{ border-left: 6px solid #dc2626 !important; }}
+      .risk-mid {{ border-left: 6px solid #f59e0b !important; }}
+      .risk-lo {{ border-left: 6px solid #16a34a !important; }}
       .gauge-wrap {{
         background: #0f172a; border-radius: 12px; padding: .9rem 1rem; color: #e2e8f0;
-        animation: fadeUp .5s ease-out;
       }}
       .gauge-track {{
         height: 14px; border-radius: 999px; background: #1e293b; overflow: hidden;
@@ -126,7 +106,6 @@ st.markdown(
         background: linear-gradient(145deg, #0f172a, #1e293b);
         color: #e2e8f0; border-radius: 8px; padding: .85rem 1rem;
         border: 1px solid rgba(41,181,232,.35);
-        animation: fadeUp .5s ease-out;
         box-shadow: 0 4px 14px rgba(15,23,42,.25);
         overflow: hidden; word-break: break-word; overflow-wrap: anywhere;
       }}
@@ -155,9 +134,9 @@ st.markdown(
     <div class="hero">
       <span class="badge">Hack2Skill</span>
       <span class="badge">Snowflake CoCo CLI · GCC Edition</span>
-      <span class="badge">Phase 2 · Risk / Fraud / Regulatory</span>
+      <span class="badge">Risk / Fraud / Regulatory</span>
       <h1>🛡️ Fraud Policy Copilot</h1>
-      <p>Review · Fraud ring · Cases · AML citations · 5 modular CoCo skills</p>
+      <p>Review · Fraud ring · Cases · Alerts · AML citations · 5 modular CoCo skills</p>
     </div>
     """,
     unsafe_allow_html=True,
@@ -452,12 +431,71 @@ def load_comments(case_id: int) -> pd.DataFrame:
     return df
 
 
+
+def load_review_audit(limit: int = 50) -> pd.DataFrame:
+    df = session.sql(f"""
+        SELECT AUDIT_ID, TXN_ID, RISK_SCORE, RECOMMENDATION, SOURCE,
+               REVIEWED_AT, REVIEWED_BY
+        FROM REVIEW_AUDIT
+        ORDER BY REVIEWED_AT DESC
+        LIMIT {int(limit)}
+    """).to_pandas()
+    if not df.empty:
+        df.columns = [c.lower() for c in df.columns]
+    return df
+
+
+def load_high_risk_24h() -> pd.DataFrame:
+    df = session.sql("""
+        SELECT AUDIT_ID, TXN_ID, RISK_SCORE, RECOMMENDATION, SOURCE,
+               REVIEWED_AT, REVIEWED_BY
+        FROM HIGH_RISK_REVIEWS_24H
+        ORDER BY REVIEWED_AT DESC
+    """).to_pandas()
+    if not df.empty:
+        df.columns = [c.lower() for c in df.columns]
+    return df
+
+
+def load_alert_events(limit: int = 50) -> pd.DataFrame:
+    df = session.sql(f"""
+        SELECT EVENT_ID, CASE_ID, TXN_ID, EVENT_TYPE, EVENT_DATA, ACTOR, CREATED_AT
+        FROM CASE_EVENTS
+        WHERE EVENT_TYPE = 'ALERT_HIGH_RISK'
+        ORDER BY CREATED_AT DESC
+        LIMIT {int(limit)}
+    """).to_pandas()
+    if not df.empty:
+        df.columns = [c.lower() for c in df.columns]
+    return df
+
+
+def audit_metrics() -> dict[str, int]:
+    rows = session.sql("""
+        SELECT
+          (SELECT COUNT(*) FROM REVIEW_AUDIT) AS TOTAL_AUDITS,
+          (SELECT COUNT(*) FROM REVIEW_AUDIT
+             WHERE RISK_SCORE >= 70
+               AND REVIEWED_AT >= DATEADD('hour', -24, CURRENT_TIMESTAMP())) AS HI_24H,
+          (SELECT COUNT(*) FROM CASE_EVENTS
+             WHERE EVENT_TYPE = 'ALERT_HIGH_RISK') AS ALERT_EVENTS
+    """).to_pandas()
+    if rows.empty:
+        return {"total_audits": 0, "hi_24h": 0, "alert_events": 0}
+    r = rows.iloc[0]
+    return {
+        "total_audits": int(r["TOTAL_AUDITS"] or 0),
+        "hi_24h": int(r["HI_24H"] or 0),
+        "alert_events": int(r["ALERT_EVENTS"] or 0),
+    }
+
+
 # ---------------------------------------------------------------------------
 # Sidebar
 # ---------------------------------------------------------------------------
 with st.sidebar:
     st.markdown("### Demo controls")
-    st.caption("Hack2Skill · CoCo CLI · GCC · Phase 2")
+    st.caption("Hack2Skill · CoCo CLI · GCC")
     st.markdown("**Skills**")
     st.markdown(
         "1. `get_case_context`  \n"
@@ -472,7 +510,9 @@ with st.sidebar:
         "(live API SKIPPED)."
     )
 
-tab_review, tab_ring, tab_cases = st.tabs(["🔎 Review", "🕸 Fraud ring", "📁 Cases"])
+tab_review, tab_ring, tab_cases, tab_alerts = st.tabs(
+    ["🔎 Review", "🕸 Fraud ring", "📁 Cases", "🚨 Alerts"]
+)
 
 # ============================= Review =======================================
 with tab_review:
@@ -593,7 +633,7 @@ with tab_review:
                 - **T2005** can outrank **T2001** because structuring (CRITICAL) beats raw amount.
                 - **T2001** hits wire threshold + high-risk geography (demo list `{', '.join(sorted(HIGH_RISK_COUNTRIES))}`).
                 - **T1001** is a clean domestic POS control case.
-                - Live sanctions API = **SKIPPED** (Phase 2 roadmap).
+                - High-risk geography uses an in-app demo country set (not a live feed).
                 - **Hack2Skill · Snowflake CoCo CLI Hackathon 2026 – GCC Edition**
                 """
             )
@@ -725,3 +765,56 @@ with tab_cases:
                         st.error(f"Transition failed: {e}")
     else:
         st.info("No cases yet — open one from the Review tab, or seed via sql/02.")
+
+# ============================= Alerts =======================================
+with tab_alerts:
+    st.markdown("#### Snowflake alerts · REVIEW_AUDIT + FRAUD_HIGH_RISK_ALERT")
+    st.caption(
+        "High risk = risk score ≥ 70. Reviews land in `REVIEW_AUDIT` when you run the Review tab. "
+        "Snowflake Alert `FRAUD_HIGH_RISK_ALERT` (from `sql/03`) checks hourly and writes "
+        "`ALERT_HIGH_RISK` rows into `CASE_EVENTS`."
+    )
+    if st.button("↻ Refresh alerts", key="refresh_alerts"):
+        st.session_state.pop("alerts_loaded", None)
+
+    try:
+        m = audit_metrics()
+        a1, a2, a3 = st.columns(3)
+        a1.metric("Audit rows", m["total_audits"])
+        a2.metric("High-risk (24h)", m["hi_24h"])
+        a3.metric("Alert events", m["alert_events"])
+
+        st.markdown("##### Recent reviews (`REVIEW_AUDIT`)")
+        audit_df = load_review_audit(50)
+        if audit_df.empty:
+            st.info("No audit rows yet — run a policy review on **T2005** or **T2001** first.")
+        else:
+            st.dataframe(audit_df, use_container_width=True, hide_index=True)
+
+        st.markdown("##### High-risk last 24h (`HIGH_RISK_REVIEWS_24H`)")
+        try:
+            hi = load_high_risk_24h()
+            if hi.empty:
+                st.info("No high-risk reviews in the last 24 hours.")
+            else:
+                st.dataframe(hi, use_container_width=True, hide_index=True)
+        except Exception as e:
+            st.warning(f"View missing — run `sql/03_audit_and_alert.sql`. ({e})")
+
+        st.markdown("##### Alert firings (`CASE_EVENTS` · ALERT_HIGH_RISK)")
+        try:
+            ev = load_alert_events(50)
+            if ev.empty:
+                st.info(
+                    "No `ALERT_HIGH_RISK` events yet. After `sql/03` is live and a high-risk "
+                    "review exists, the alert can take up to ~60 minutes, or you can "
+                    "`EXECUTE ALERT FRAUD_HIGH_RISK_ALERT;` once as ACCOUNTADMIN."
+                )
+            else:
+                st.dataframe(ev, use_container_width=True, hide_index=True)
+        except Exception as e:
+            st.warning(f"Could not read alert events (run sql/02 + sql/03): {e}")
+    except Exception as e:
+        st.error(
+            f"Alerts need `REVIEW_AUDIT` — run `sql/03_audit_and_alert.sql` in Snowflake. ({e})"
+        )
