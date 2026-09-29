@@ -114,3 +114,7 @@ environment.yml
 
 Hackathon prototype for Hack2Skill · Snowflake CoCo CLI · GCC Edition.  
 Built for demo clarity: small sample data, honest “demo sanctions list,” native Snowflake Alert for monitoring — not a production sanctions product.
+
+## Demo video
+
+[Watch the CoCo CLI + Streamlit verify demo](docs/Fraud_Policy_Copilot_Demo.mp4) (~6 min).
