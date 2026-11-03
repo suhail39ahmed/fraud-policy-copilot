@@ -32,7 +32,7 @@ Fraud analysts burn time hunting AML / KYC policy text for every alert. I wanted
 
 ---
 
-## Design
+## Design & Engineering
 
 ```mermaid
 flowchart LR
@@ -56,6 +56,19 @@ flowchart LR
 - **Cortex where it helps.** `explain_decision` can call `SNOWFLAKE.CORTEX.COMPLETE` for the narrative, with a static fallback if Cortex isn't enabled.
 
 **Stack:** Snowflake · Streamlit in Snowflake · CoCo CLI skills · Snowflake Cortex (optional) · SQL tables / views / Alert · Python
+
+**Engineering details**
+
+- **Data and logic in SQL:** tables, views and the alert are defined in [`sql/`](sql); scoring rules run as plain Snowflake SQL.
+- **Skills and workflow:** each step is a CoCo CLI skill under [`skills/`](skills), chained by [`workflow/fraud_case_review`](workflow/fraud_case_review/WORKFLOW.md).
+- **App:** Streamlit in Snowflake under [`app/`](app), with the Conda environment in [`environment.yml`](environment.yml).
+- **Testing:** walked through end to end on the sample data (see Quick start); no automated test suite yet.
+
+**What I'd do next**
+
+- Automated tests for the scoring rules against the sample data.
+- A live sanctions feed in place of the demo list.
+- Cortex Search over the full policy documents for richer citations.
 
 ---
 
