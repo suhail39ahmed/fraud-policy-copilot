@@ -1,7 +1,8 @@
 ﻿# Fraud Policy Copilot — Build & Demo Guide
 
-**Event:** Snowflake CoCo CLI Hackathon 2026 – GCC Edition (Hack2Skill)  
-**Challenge:** Risk, Fraud and Regulatory Intelligence Copilot  
+**Theme:** Risk, fraud and regulatory intelligence copilot on Snowflake CoCo CLI + Cortex  
+**Demo video:** https://youtu.be/5t6cmuguZ9Q  
+**Write-up:** https://savvysuhail.com/fraud-policy-copilot/  
 **Repo:** https://github.com/suhail39ahmed/fraud-policy-copilot  
 **Live app (SiS):** `FRAUD_COPILOT.DEMO` → Streamlit `fraud_policy_copilot`
 
@@ -98,7 +99,7 @@ If `CREATE ALERT` is unavailable on the trial, use the **Task fallback** comment
 4. **Cases** → select the case → comment + status transition  
 5. **Alerts** → show `REVIEW_AUDIT`, high-risk 24h, `ALERT_HIGH_RISK` events  
 
-Talking points for judges: modular skills, policy citations, native Snowflake Alert (not only a UI flash), honest demo sanctions list instead of a fake live feed.
+Key talking points: modular skills, policy citations, native Snowflake Alert (not only a UI flash), honest demo sanctions list instead of a fake live feed.
 
 ---
 
@@ -108,14 +109,10 @@ Under `skills/` + workflow `fraud_case_review`. Useful for CLI demos; SiS alone 
 
 ---
 
-## Submission checklist
+## Showcase assets
 
-- [ ] GitHub repo + polished README  
-- [ ] Live SiS link or Loom of the live app  
-- [ ] Screenshots: Review (T2005), Fraud ring (C005), Cases, Alerts  
-- [ ] Demo video (3–5 min) following the script above  
-- [ ] Deck / PDF: problem, architecture, Snowflake features, demo, skips  
-- [ ] Hack2Skill portal fields filled  
+- Demo video: [YouTube](https://youtu.be/5t6cmuguZ9Q) · [MP4 in repo](Fraud_Policy_Copilot_Demo_Snowflake_Coretx.mp4)  
+- Write-up: https://savvysuhail.com/fraud-policy-copilot/  
 
 ---
 
@@ -128,3 +125,6 @@ Under `skills/` + workflow `fraud_case_review`. Useful for CLI demos; SiS alone 
 | Ring focus | `C005` |
 | High-risk threshold | Risk score ≥ 70 |
 | Sanctions | Demo list only — `CY`, `IR`, `KP`, `RU` |
+
+
+<sub>Originally built for the Snowflake CoCo CLI hackathon.</sub>
