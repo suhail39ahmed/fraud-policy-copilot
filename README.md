@@ -1,5 +1,7 @@
 # Fraud Policy Copilot — what you can build with Snowflake CoCo CLI + Cortex
 
+![Fraud Policy Copilot: what you can build with Snowflake CoCo CLI + Cortex](docs/cover.jpg)
+
 > I designed and built a fraud-analyst copilot that goes from a **flagged transaction** to a **policy-cited decision**, a **fraud-ring map**, a **case**, and a **native Snowflake alert trail**, all inside Snowflake.
 
 ![Snowflake](https://img.shields.io/badge/Snowflake-29B5E8?logo=snowflake&logoColor=white)
